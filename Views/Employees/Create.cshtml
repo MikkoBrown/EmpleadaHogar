@@ -1,0 +1,37 @@
+@model EmpleadaHogar.ViewModels.EmployeeFormViewModel
+@{ ViewData["Title"] = Model.Id.HasValue ? "Editar trabajadora" : "Nueva trabajadora"; }
+<div class="section-page"><a class="back-link" asp-action="Index">← Trabajadoras</a><div class="eyebrow">DATOS LABORALES</div><h1>@(Model.Id.HasValue ? "Editar trabajadora" : "Añadir trabajadora")</h1><p class="subhead">Registra los datos personales, la dirección y las condiciones del contrato.</p>
+<form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-card"><input asp-for="Id" type="hidden" />
+<div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+<h2 class="form-section-title">Datos personales</h2><div class="form-grid">
+<label class="wide-field">Empleador/a<select asp-for="EmployerProfileId" asp-items="Model.Employers"><option value="">Selecciona...</option></select><span asp-validation-for="EmployerProfileId"></span></label>
+<label>Nombre<input asp-for="FirstName" autocomplete="given-name" /><span asp-validation-for="FirstName"></span></label><label>Apellidos<input asp-for="LastName" autocomplete="family-name" /><span asp-validation-for="LastName"></span></label>
+<label>DNI/NIE<input asp-for="IdentificationNumber" autocomplete="off" /></label><label>Número de Seguridad Social<input asp-for="SocialSecurityNumber" autocomplete="off" /></label><label>Correo electrónico<input asp-for="Email" autocomplete="email" /></label><label>Teléfono<input asp-for="Phone" autocomplete="tel" /></label>
+<label class="wide-field">Dirección (calle y número)<input asp-for="Address" autocomplete="street-address" placeholder="Calle, número, piso..." /></label>
+<label>Código postal<input asp-for="PostalCode" inputmode="numeric" maxlength="5" placeholder="28001" /><span asp-validation-for="PostalCode"></span></label><label>Ciudad<input asp-for="City" autocomplete="address-level2" placeholder="Madrid" /></label><label class="wide-field">Provincia<input asp-for="Province" autocomplete="address-level1" placeholder="Madrid" /></label>
+</div>
+<h2 class="form-section-title">Contrato y jornada</h2><div class="form-grid">
+<label>Fecha de inicio<input asp-for="ContractStartDate" type="date" /></label><label>Tipo de contrato<select asp-for="ContractType"><option>Indefinido</option><option>Temporal</option></select></label>
+<fieldset class="wide-field schedule-field"><legend>Días de trabajo</legend><div class="weekday-options">
+<label><input asp-for="Monday" /> Lunes</label><label><input asp-for="Tuesday" /> Martes</label><label><input asp-for="Wednesday" /> Miércoles</label><label><input asp-for="Thursday" /> Jueves</label><label><input asp-for="Friday" /> Viernes</label><label><input asp-for="Saturday" /> Sábado</label><label><input asp-for="Sunday" /> Domingo</label>
+</div><span asp-validation-for="Monday"></span></fieldset>
+<label>Desde<input asp-for="WorkStartTime" type="time" /><span asp-validation-for="WorkStartTime"></span></label><label>Hasta<input asp-for="WorkEndTime" type="time" /><span asp-validation-for="WorkEndTime"></span></label>
+<label>Horas semanales calculadas<input id="weeklyHoursDisplay" value="@Model.WeeklyHours.ToString("0.##", System.Globalization.CultureInfo.GetCultureInfo("es-ES"))" readonly /></label>
+<label>Salario base mensual (€)<input asp-for="MonthlyBaseSalary" type="number" min="0" step="0.01" /></label><label>Prorrateo mensual de pagas extra (€)<input asp-for="ExtraPaymentsMonthly" type="number" min="0" step="0.01" /></label><label>Vacaciones anuales (días naturales)<input asp-for="AnnualVacationDays" type="number" min="0" max="30" /></label><label>Retención IRPF (%)<input asp-for="IrpfWithholdingPercent" type="number" min="0" max="100" step="0.01" /></label><label class="wide-field">Funciones<textarea asp-for="Duties" rows="3" placeholder="Limpieza y preparación de comidas"></textarea></label>
+</div>
+@if (!string.IsNullOrWhiteSpace(Model.LegacyWorkSchedule)) { <p class="form-hint">Horario anterior guardado: @Model.LegacyWorkSchedule. Selecciona los días y horas para convertirlo al nuevo formato.</p> }
+<p class="form-hint">Las horas semanales se calculan multiplicando los días seleccionados por la duración diaria. Para horarios diferentes según el día habrá que definir tramos individuales en una futura ampliación.</p>
+<div class="form-actions"><a class="outline-button" asp-action="Index">Cancelar</a><button class="primary-button" type="submit">@(Model.Id.HasValue ? "Guardar cambios" : "Guardar trabajadora")</button></div>
+</form></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" />
+<script>
+(() => {
+ const daySelectors = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+ const start = document.getElementById('WorkStartTime'); const end = document.getElementById('WorkEndTime');
+ const output = document.getElementById('weeklyHoursDisplay');
+ function update() { const days = daySelectors.filter(id => document.getElementById(id)?.checked).length;
+   if (start?.value && end?.value) { const [sh,sm] = start.value.split(':').map(Number); const [eh,em] = end.value.split(':').map(Number); const mins = (eh*60+em)-(sh*60+sm); output.value = mins > 0 ? ((mins/60)*days).toLocaleString('es-ES',{maximumFractionDigits:2}) : '0'; } else output.value='0'; }
+ [...daySelectors.map(id=>document.getElementById(id)),start,end].filter(Boolean).forEach(el=>el.addEventListener('change',update)); update();
+})();
+</script>
+}

@@ -1,0 +1,17 @@
+@page
+@model EmpleadaHogar.Areas.Identity.Pages.Account.RegisterModel
+@{ ViewData["Title"] = "Nuevo usuario"; }
+<div class="auth-page"><div class="auth-card">
+    <div class="auth-brand"><div class="auth-brand-mark">H</div><div class="auth-brand-name">Empleada<span>Hogar</span></div></div>
+    <div class="auth-heading"><span class="auth-eyebrow">NUEVA CUENTA</span><h1>Crear usuario</h1><p>Registra tu cuenta para gestionar tus propios empleadores, trabajadoras y nóminas.</p></div>
+    <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+        <div asp-validation-summary="ModelOnly" class="auth-validation"></div>
+        <div class="auth-field"><label asp-for="Input.DisplayName"></label><input asp-for="Input.DisplayName" class="auth-input" autocomplete="name" /><span asp-validation-for="Input.DisplayName" class="auth-field-error"></span></div>
+        <div class="auth-field"><label asp-for="Input.Email"></label><input asp-for="Input.Email" class="auth-input" autocomplete="email" /><span asp-validation-for="Input.Email" class="auth-field-error"></span></div>
+        <div class="auth-field"><label asp-for="Input.Password"></label><input asp-for="Input.Password" class="auth-input" autocomplete="new-password" /><span asp-validation-for="Input.Password" class="auth-field-error"></span></div>
+        <div class="auth-field"><label asp-for="Input.ConfirmPassword"></label><input asp-for="Input.ConfirmPassword" class="auth-input" autocomplete="new-password" /><span asp-validation-for="Input.ConfirmPassword" class="auth-field-error"></span></div>
+        <button type="submit" class="auth-submit">Crear cuenta <span>→</span></button>
+    </form>
+    <p class="auth-privacy"><a asp-page="./Login">Volver al inicio de sesión</a> · La nueva cuenta tendrá rol Usuario.</p>
+</div><div class="auth-copyright">© @DateTime.Now.Year EmpleadaHogar</div></div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,22 @@
+@model EmpleadaHogar.ViewModels.EmployerFormViewModel
+@{ ViewData["Title"] = Model.Id.HasValue ? "Editar empleador/a" : "Nuevo empleador/a"; }
+<div class="section-page"><a class="back-link" asp-action="Index">← Empleadores</a><div class="eyebrow">DATOS DEL HOGAR</div><h1>@(Model.Id.HasValue ? "Editar empleador/a" : "Añadir empleador/a")</h1><p class="subhead">Los datos se guardarán vinculados a tu cuenta.</p>
+    <form asp-action="@(Model.Id.HasValue ? "Edit" : "Create")" asp-route-id="@Model.Id" method="post" class="form-card"><input asp-for="Id" type="hidden" />
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <div class="form-grid">
+            <label>Nombre<input asp-for="FirstName" autocomplete="given-name" /><span asp-validation-for="FirstName"></span></label>
+            <label>Apellidos<input asp-for="LastName" autocomplete="family-name" /><span asp-validation-for="LastName"></span></label>
+            <label>DNI/NIE<input asp-for="IdentificationNumber" autocomplete="off" /></label>
+            <label>Correo electrónico<input asp-for="Email" autocomplete="email" /></label>
+            <label>Teléfono<input asp-for="Phone" autocomplete="tel" /></label>
+            <label>Código de cuenta de cotización (CCC)<input asp-for="SocialSecurityEmployerCode" autocomplete="off" /></label>
+            <label class="wide-field">Dirección<input asp-for="Address" autocomplete="street-address" /></label>
+            <label>Código postal<input asp-for="PostalCode" autocomplete="postal-code" /></label>
+            <label>Localidad<input asp-for="City" autocomplete="address-level2" /></label>
+            <label>Provincia<input asp-for="Province" autocomplete="address-level1" /></label>
+        </div>
+        <div class="form-actions"><a class="outline-button" asp-action="Index">Cancelar</a><button class="primary-button" type="submit">@(Model.Id.HasValue ? "Guardar cambios" : "Guardar empleador/a")</button></div>
+    </form>
+    </div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }
+

@@ -1,0 +1,28 @@
+@model EmpleadaHogar.ViewModels.PayrollFormViewModel
+@{ ViewData["Title"] = "Nueva nómina"; }
+<div class="section-page"><a class="back-link" asp-action="Index">← Nóminas</a><div class="eyebrow">RECIBO MENSUAL</div><h1>Preparar nómina</h1><p class="subhead">Los importes se guardan como borrador para revisarlos antes de finalizar.</p>
+    <form asp-action="Create" method="post" class="form-card">
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+        <div class="form-grid">
+            <label class="wide-field">Trabajadora<select id="EmployeeProfileId" asp-for="EmployeeProfileId" asp-items="Model.Employees"><option value="">Selecciona...</option></select><span asp-validation-for="EmployeeProfileId"></span></label>
+            <label>Año<input asp-for="Year" type="number" min="2020" max="2100" /></label>
+            <label>Mes<input asp-for="Month" type="number" min="1" max="12" /></label>
+            <label>Salario bruto mensual (€)<input id="GrossPay" asp-for="GrossPay" type="number" min="0.01" step="0.01" /></label>
+            <label>Cotización SS trabajadora (€)<input asp-for="EmployeeSocialSecurity" type="number" min="0" step="0.01" /></label>
+            <label>Retención IRPF (€)<input asp-for="IrpfWithholding" type="number" min="0" step="0.01" /></label>
+            <label>Otras deducciones legales (€)<input asp-for="OtherEmployeeDeductions" type="number" min="0" step="0.01" /></label>
+            <label>Cotización SS empleadora (€)<input asp-for="EmployerSocialSecurity" type="number" min="0" step="0.01" /></label>
+        </div>
+        <p class="form-hint">El neto se calcula como salario bruto menos las deducciones que introduzcas. La cuota empresarial se suma al coste total y no se descuenta del salario. Este formulario no aplica automáticamente tipos o bonificaciones.</p>
+        <div class="form-actions"><a class="outline-button" asp-action="Index">Cancelar</a><button class="primary-button" type="submit">Guardar borrador</button></div>
+    </form>
+    </div>
+@section Scripts { <partial name="_ValidationScriptsPartial" />
+<script>
+const grossDefaults = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DefaultGrossByEmployee));
+const employeeSelect = document.getElementById("EmployeeProfileId");
+const grossInput = document.getElementById("GrossPay");
+employeeSelect.addEventListener("change", () => { const amount = grossDefaults[employeeSelect.value]; if (amount !== undefined) grossInput.value = Number(amount).toFixed(2); });
+</script> }
+
+

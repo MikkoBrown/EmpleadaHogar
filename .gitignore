@@ -1,0 +1,34 @@
+# Compilación y Visual Studio
+bin/
+obj/
+.vs/
+.vscode/
+
+# Archivos temporales
+*.user
+*.suo
+*.log
+*.tmp
+
+# Bases de datos
+*.db
+*.sqlite
+*.sqlite3
+
+# Configuración privada
+appsettings.Development.json
+secrets.json
+
+# Certificados y claves
+*.pfx
+*.p12
+*.key
+
+# Datos y documentos privados
+Storage/
+Documentos/
+Backups/
+
+# Sistema operativo
+Thumbs.db
+.DS_Store<TDT2020250A0000><AUX>DT26043424615I                E 20250402                          IRF 1.00   0Q2826000H                                                                                                                                                                                                                     </AUX><TDT201000>  01301185YMORENO PRIETO FRANCISCO                                                         62699364020250A           ES7701820149200202392701                                                                                                                                        </TDT201000></TDT2020250A0000>

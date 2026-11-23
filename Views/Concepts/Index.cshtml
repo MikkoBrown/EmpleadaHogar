@@ -1,0 +1,22 @@
+@model EmpleadaHogar.Controllers.ConceptListViewModel
+@using EmpleadaHogar.Models
+@{ var title = ViewData["Title"]?.ToString() ?? "Conceptos"; var action = ViewData["Action"]?.ToString() ?? "Contributions"; ViewData["Title"] = title; }
+<div class="section-page">
+ <div class="welcome-row"><div><div class="eyebrow">CONFIGURACIÓN ECONÓMICA</div><h1>@title</h1><p class="subhead">Catálogo de conceptos propios de tu cuenta y sus periodos de vigencia. Estos valores no se aplican automáticamente a nóminas existentes.</p></div></div>
+ @if (TempData["Success"] is string ok) { <div class="form-success">@ok</div> }
+ <section class="panel concept-create"><h2>Nuevo concepto</h2><form asp-action="Create" method="post" class="concept-form">
+  <input type="hidden" name="kind" value="@((int)Model.Kind)" />
+  <div><label>Código</label><input name="code" class="form-control" maxlength="80" required /></div>
+  <div><label>Nombre</label><input name="name" class="form-control" maxlength="160" required /></div>
+  <div><label>Cálculo</label><select name="calculationType" class="form-select"><option value="1">Importe manual</option><option value="2">Importe fijo</option><option value="3">Porcentaje</option><option value="4">Horas × tarifa</option></select></div>
+  <div><label>Valor predeterminado</label><input name="defaultValue" type="number" step="0.0001" class="form-control" /></div>
+  <div><label>Válido desde</label><input name="validFrom" type="date" class="form-control" value="@DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd")" required /></div>
+  <div><label>Válido hasta</label><input name="validTo" type="date" class="form-control" /></div>
+  <button class="primary-button" type="submit">＋ Guardar concepto</button>
+ </form></section>
+ <form method="get" asp-action="@action" class="pagination-toolbar"><input name="search" value="@Model.Search" class="form-control" placeholder="Buscar código o nombre" /><select name="pageSize" class="form-select"><option value="10" selected="@(Model.PageSize == 10)">10</option><option value="20" selected="@(Model.PageSize == 20)">20</option><option value="50" selected="@(Model.PageSize == 50)">50</option></select><button class="small-action">Buscar</button></form>
+ <section class="panel"><div class="table-responsive"><table class="data-table"><thead><tr><th>Código</th><th>Concepto</th><th>Tipo de cálculo</th><th>Valor</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead><tbody>
+ @foreach (var item in Model.Items) { <tr><td>@item.Code</td><td><strong>@item.Name</strong></td><td>@item.CalculationType</td><td>@(item.DefaultValue?.ToString("N4") ?? "—")</td><td>@item.ValidFrom.ToString("dd/MM/yyyy") – @(item.ValidTo?.ToString("dd/MM/yyyy") ?? "Actual")</td><td>@(item.IsActive ? "Activo" : "Inactivo")</td><td><form asp-action="Toggle" method="post"><input type="hidden" name="id" value="@item.Id" /><button class="small-action" type="submit">@(item.IsActive ? "Desactivar" : "Activar")</button></form></td></tr> }
+ </tbody></table></div>@if (!Model.Items.Any()) { <p class="empty-state">Todavía no hay conceptos configurados.</p> }</section>
+ <div class="pagination-summary">@Model.TotalCount conceptos · Página @Model.Page de @Model.TotalPages</div><nav class="pager">@if (Model.Page > 1) { <a asp-action="@action" asp-route-page="@(Model.Page-1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">← Anterior</a> }@if (Model.Page < Model.TotalPages) { <a asp-action="@action" asp-route-page="@(Model.Page+1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">Siguiente →</a> }</nav>
+</div>

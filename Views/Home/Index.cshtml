@@ -1,0 +1,442 @@
+@model EmpleadaHogar.ViewModels.DashboardViewModel
+@using System.Text.Json
+
+@{
+    ViewData["Title"] = "Resumen";
+
+    var chartLabels = Model.MonthlyData.Select(x => x.MonthName).ToArray();
+    var netPayData = Model.MonthlyData.Select(x => x.NetPay).ToArray();
+    var socialSecurityData = Model.MonthlyData.Select(x => x.EmployerSocialSecurity).ToArray();
+    var totalCostData = Model.MonthlyData.Select(x => x.TotalEmployerCost).ToArray();
+
+    var euroFormat = "N2";
+}
+
+<div class="dashboard-content">
+
+    <!-- Navegación lateral y barra superior compartidas desde _Layout.cshtml -->
+    
+
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger">@error</div>
+            }
+
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success">@success</div>
+            }
+
+            <!-- CABECERA -->
+
+            <div class="welcome-row">
+                <div>
+                    <div class="eyebrow">ESPACIO PRIVADO</div>
+                    <h1>Resumen de tu gestión</h1>
+                    <p class="subhead">
+                        Controla tus empleadores, trabajadoras y costes laborales desde un único lugar.
+                    </p>
+                </div>
+
+                <a class="primary-button"
+                   asp-controller="Employers"
+                   asp-action="Create">
+                    ＋ Añadir empleador/a
+                </a>
+            </div>
+
+            <!-- INDICADORES GENERALES -->
+
+            <section class="metric-grid">
+
+                <article class="metric-card">
+                    <div class="metric-top">
+                        <span>Empleadores</span>
+                        <span class="metric-icon mint">⌂</span>
+                    </div>
+                    <strong class="metric-value">@Model.EmployerCount</strong>
+                    <div class="metric-note">Hogares registrados</div>
+                </article>
+
+                <article class="metric-card">
+                    <div class="metric-top">
+                        <span>Trabajadoras</span>
+                        <span class="metric-icon lilac">♙</span>
+                    </div>
+                    <strong class="metric-value">@Model.EmployeeCount</strong>
+                    <div class="metric-note">Trabajadoras registradas</div>
+                </article>
+
+                <article class="metric-card">
+                    <div class="metric-top">
+                        <span>Nóminas</span>
+                        <span class="metric-icon blue">▤</span>
+                    </div>
+                    <strong class="metric-value">@Model.PayrollCount</strong>
+                    <div class="metric-note">Recibos guardados</div>
+                </article>
+
+                <article class="metric-card">
+                    <div class="metric-top">
+                        <span>Coste anual</span>
+                        <span class="metric-icon peach">€</span>
+                    </div>
+                    <strong class="metric-value metric-money">
+                        @Model.AnnualEmployerCost.ToString(euroFormat) €
+                    </strong>
+                    <div class="metric-note">Coste total en @Model.SelectedYear</div>
+                </article>
+
+            </section>
+
+            <!-- EVOLUCIÓN DE COSTES -->
+
+            <section class="panel chart-panel">
+
+                <div class="chart-header">
+
+                    <div>
+                        <div class="eyebrow">ANÁLISIS ECONÓMICO</div>
+                        <h2>Evolución de costes</h2>
+                        <span class="muted">
+                            Comparativa mensual de salarios y cotizaciones
+                        </span>
+                    </div>
+
+                    <form method="get"
+                          asp-controller="Home"
+                          asp-action="Index"
+                          class="dashboard-filters">
+
+                        <div class="filter-group">
+                            <label for="year">Ejercicio</label>
+                            <select id="year"
+                                    name="year"
+                                    class="form-select"
+                                    asp-items="Model.AvailableYears">
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="employerId">Empleador</label>
+                            <select id="employerId"
+                                    name="employerId"
+                                    class="form-select"
+                                    asp-items="Model.Employers">
+                            </select>
+                        </div>
+
+                        <button type="submit" class="filter-button">
+                            Aplicar
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <!-- RESUMEN ECONÓMICO -->
+
+                <div class="economic-summary">
+
+                    <div class="economic-item">
+                        <span class="legend-dot net-dot"></span>
+                        <div>
+                            <small>Salario neto</small>
+                            <strong>@Model.AnnualNetPay.ToString(euroFormat) €</strong>
+                        </div>
+                    </div>
+
+                    <div class="economic-item">
+                        <span class="legend-dot ss-dot"></span>
+                        <div>
+                            <small>Seguridad Social empleadora</small>
+                            <strong>@Model.AnnualEmployerSocialSecurity.ToString(euroFormat) €</strong>
+                        </div>
+                    </div>
+
+                    <div class="economic-item">
+                        <span class="legend-dot total-dot"></span>
+                        <div>
+                            <small>Coste total</small>
+                            <strong>@Model.AnnualEmployerCost.ToString(euroFormat) €</strong>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- GRÁFICO -->
+                @if (Model.MonthlyData.Any(x =>
+                                    x.NetPay != 0 ||
+                                    x.EmployerSocialSecurity != 0 ||
+                                    x.TotalEmployerCost != 0))
+                {
+                    <div class="chart-container">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state chart-empty">
+                        <div class="empty-icon">▤</div>
+                        <strong>Todavía no hay datos económicos</strong>
+                        <p>
+                            Cuando finalices alguna nómina, aparecerá aquí
+                            la evolución mensual de los costes.
+                        </p>
+                        <a class="text-link"
+                           asp-controller="Payrolls"
+                           asp-action="Create">
+                            Preparar primera nómina →
+                        </a>
+                    </div>
+                }
+
+                <div class="chart-footnote">
+                    Se contabilizan las nóminas finalizadas, enviadas y pagadas.
+                    Los borradores quedan excluidos.
+                </div>
+
+            </section>
+
+            <!-- TARJETAS INFERIORES -->
+
+            <div class="lower-grid">
+
+                <section class="panel">
+
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Empieza aquí</h2>
+                            <span class="muted">
+                                Organiza la información de tu hogar
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="details-list">
+
+                        <div class="detail-row">
+                            <span class="detail-icon">⌂</span>
+                            <div>
+                                <strong>1. Añade al empleador/a</strong>
+                                <small>Una cuenta puede gestionar varios hogares.</small>
+                            </div>
+                            <a class="text-link"
+                               asp-controller="Employers"
+                               asp-action="Index">
+                                Abrir →
+                            </a>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-icon">♙</span>
+                            <div>
+                                <strong>2. Añade trabajadoras</strong>
+                                <small>Vincula cada contrato con su empleador/a.</small>
+                            </div>
+                            <a class="text-link"
+                               asp-controller="Employees"
+                               asp-action="Index">
+                                Abrir →
+                            </a>
+                        </div>
+
+                        <div class="detail-row">
+                            <span class="detail-icon">▤</span>
+                            <div>
+                                <strong>3. Prepara nóminas</strong>
+                                <small>Genera recibos y registra los pagos.</small>
+                            </div>
+                            <a class="text-link"
+                               asp-controller="Payrolls"
+                               asp-action="Index">
+                                Abrir →
+                            </a>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <section class="panel">
+
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Privacidad por cuenta</h2>
+                            <span class="muted">Acceso individual</span>
+                        </div>
+                    </div>
+
+                    <div class="help-card">
+                        <span>✓</span>
+                        <div>
+                            <strong>Tus datos están protegidos</strong>
+                            <p>
+                                Los registros se filtran en servidor por la
+                                cuenta autenticada.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="help-card">
+                        <span>↗</span>
+                        <div>
+                            <strong>Preparado para varios hogares</strong>
+                            <p>
+                                Cada cuenta puede gestionar varios empleadores
+                                y trabajadoras.
+                            </p>
+                        </div>
+                    </div>
+
+                </section>
+
+            </div>
+
+            <footer class="footnote">
+                EmpleadosHogar es una herramienta de gestión y no sustituye
+                la confirmación de cotizaciones y retenciones oficiales.
+            </footer>
+
+        </div>
+</div>
+
+@section Scripts {
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+
+            const canvas = document.getElementById("costChart");
+
+            if (!canvas) {
+                return;
+            }
+
+            const labels = @Html.Raw(JsonSerializer.Serialize(chartLabels));
+            const netPay = @Html.Raw(JsonSerializer.Serialize(netPayData));
+            const socialSecurity = @Html.Raw(JsonSerializer.Serialize(socialSecurityData));
+            const totalCost = @Html.Raw(JsonSerializer.Serialize(totalCostData));
+
+            const euro = new Intl.NumberFormat("es-ES", {
+                style: "currency",
+                currency: "EUR"
+            });
+
+            new Chart(canvas, {
+                type: "line",
+
+                data: {
+                    labels: labels,
+
+                    datasets: [
+                        {
+                            label: "Salario neto",
+                            data: netPay,
+                            borderColor: "#6D9E91",
+                            backgroundColor: "#6D9E91",
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            tension: 0.35
+                        },
+                        {
+                            label: "Seguridad Social empleadora",
+                            data: socialSecurity,
+                            borderColor: "#A58AC4",
+                            backgroundColor: "#A58AC4",
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            tension: 0.35
+                        },
+                        {
+                            label: "Coste total",
+                            data: totalCost,
+                            borderColor: "#C18A42",
+                            backgroundColor: "#C18A42",
+                            borderWidth: 3,
+                            pointRadius: 4,
+                            pointHoverRadius: 7,
+                            tension: 0.35
+                        }
+                    ]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+
+                    interaction: {
+                        intersect: false,
+                        mode: "index"
+                    },
+
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+
+                        tooltip: {
+                            backgroundColor: "#1B2A41",
+                            padding: 13,
+                            titleFont: {
+                                family: "Inter",
+                                size: 13
+                            },
+                            bodyFont: {
+                                family: "Inter",
+                                size: 12
+                            },
+                            callbacks: {
+                                label: function(context) {
+                                    return " " + context.dataset.label +
+                                        ": " + euro.format(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            border: {
+                                display: false
+                            },
+                            ticks: {
+                                color: "#788395",
+                                font: {
+                                    family: "Inter",
+                                    size: 11
+                                }
+                            }
+                        },
+
+                        y: {
+                            beginAtZero: true,
+                            border: {
+                                display: false
+                            },
+                            grid: {
+                                color: "#EDF0F4"
+                            },
+                            ticks: {
+                                color: "#788395",
+                                font: {
+                                    family: "Inter",
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return euro.format(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+}

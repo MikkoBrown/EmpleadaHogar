@@ -1,0 +1,34 @@
+@model EmpleadaHogar.ViewModels.PagedResult<EmpleadaHogar.Models.PayrollRecord>
+@{ ViewData["Title"] = "Nóminas"; }
+<div class="section-page">
+        <div class="welcome-row"><div><div class="eyebrow">RECIBOS MENSUALES</div><h1>Nóminas</h1><p class="subhead">Prepara, revisa, descarga en PDF y envía los recibos.</p></div><a class="primary-button" asp-action="Create">＋ Preparar nómina</a></div>
+        @if (TempData["Success"] is string success) { <div class="form-success">@success</div> }
+        @if (TempData["Error"] is string error) { <div class="validation-summary-errors">@error</div> }
+        @if (Model.TotalCount == 0)
+        {
+            <section class="panel empty-list"><div class="empty-icon">▤</div><h2>Aún no hay nóminas</h2><p>Añade empleador/a y trabajadora, después prepara el primer recibo mensual.</p><a class="primary-button" asp-action="Create">Preparar nómina</a></section>
+        }
+        else
+        {
+            <section class="panel"><div class="table-responsive"><table class="data-table"><thead><tr><th>Período</th><th>Trabajadora</th><th>Salario bruto</th><th>Neto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
+            @foreach (var payroll in Model.Items) {
+                <tr><td>@(new DateTime(payroll.Year, payroll.Month, 1).ToString("MMMM yyyy", System.Globalization.CultureInfo.GetCultureInfo("es-ES")))</td><td><strong>@payroll.EmployeeNameSnapshot</strong></td><td>@payroll.GrossPay.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-ES"))</td><td>@payroll.NetPay.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("es-ES"))</td>
+                    <td><span class="tag @(payroll.Status == PayrollStatus.Draft ? "pending" : "done")">@(payroll.PaidUtc.HasValue ? "Pagada" : payroll.Status switch { PayrollStatus.Draft => "Borrador", PayrollStatus.Finalized => "Finalizada", PayrollStatus.Paid => "Pagada", _ => "Enviada" })</span>@if (payroll.PaidUtc.HasValue) { <small class="paid-note">@payroll.PaidUtc.Value.ToLocalTime().ToString("dd/MM/yyyy")</small> }</td>
+                    <td class="action-cell"><a class="text-link" asp-action="Pdf" asp-route-id="@payroll.Id">Descargar PDF</a>
+                    @if (payroll.Status == PayrollStatus.Draft) {
+                        <form asp-action="Finalize" asp-route-id="@payroll.Id" method="post" class="inline-form"><label class="review-check"><input type="checkbox" name="confirmReviewed" value="true" required /> He revisado</label><button class="small-action" type="submit">Finalizar</button></form>
+                    } else if (payroll.Status == PayrollStatus.Finalized || payroll.Status == PayrollStatus.Sent) {
+                        <form asp-action="Send" asp-route-id="@payroll.Id" method="post" class="inline-form"><button class="small-action" type="submit">Enviar por correo</button></form>
+                    }
+                    @if (payroll.Status != PayrollStatus.Draft && !payroll.PaidUtc.HasValue) {
+                        <form asp-action="MarkPaid" asp-route-id="@payroll.Id" method="post" class="inline-form"><label class="review-check"><input type="checkbox" name="confirmPaid" value="true" required /> Pagada</label><button class="small-action" type="submit">Registrar</button></form>
+                    }
+                </td></tr>
+            }
+            </tbody></table></div></section>
+        }
+        <form method="get" class="pagination-toolbar"><input type="search" name="search" value="@Model.Search" placeholder="Buscar trabajadora o empleador/a..." class="form-control" /><select name="pageSize" class="form-select" onchange="this.form.submit()"><option value="10" selected="@(Model.PageSize == 10)">10</option><option value="20" selected="@(Model.PageSize == 20)">20</option><option value="50" selected="@(Model.PageSize == 50)">50</option></select><button class="small-action" type="submit">Buscar</button></form>
+        <div class="pagination-summary">Mostrando @Model.FirstItem–@Model.LastItem de @Model.TotalCount</div><nav class="pager" aria-label="Paginación">@if (Model.Page > 1) { <a asp-action="Index" asp-route-page="@(Model.Page - 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">← Anterior</a> }<span>Página @Model.Page de @Model.TotalPages</span>@if (Model.Page < Model.TotalPages) { <a asp-action="Index" asp-route-page="@(Model.Page + 1)" asp-route-pageSize="@Model.PageSize" asp-route-search="@Model.Search">Siguiente →</a> }</nav>
+        <div class="form-hint page-hint">El PDF muestra los importes introducidos. Revisa bases, retenciones y requisitos legales. El correo solo se habilita para una nómina finalizada y si hay un email en la ficha de la trabajadora.</div>
+        <a class="back-link" asp-controller="Home" asp-action="Index">← Volver al resumen</a>
+    </div>
